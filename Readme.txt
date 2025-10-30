@@ -1,2 +1,4 @@
-主要功能：1、用户登录，2、配合n8n工作流，和pg、mysql数据库进行会话，查询表结构、表数据、内存数据等.
-主要技术栈：sqllite数据库-可替换mysql;Next.js/React ;python fastapi（登录和鉴权）;n8n(mcp+ai工作流web hook)
+ 
+a mordern chat web page page  with db using N8N workflow webhook 
+一：main function: 1.web login,jwt token auth 2.chat with db :query table structure, table data, memory etc.
+二：main stack:  Next.js/React; python fastapi(login and auth); n8n(mcp+ai workflow web hook)
