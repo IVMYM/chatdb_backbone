@@ -1,0 +1,25 @@
+# --- Core Framework ---
+fastapi==0.115.12
+uvicorn[standard]==0.30.6
+
+# --- Auth & Security ---
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+python-multipart==0.0.9
+authlib==1.5.2
+
+# --- ORM & Database ---
+sqlmodel==0.0.21
+sqlalchemy==2.0.36
+alembic==1.13.3
+sqlite-utils==3.36
+
+# --- Environment & Utils ---
+pydantic>=2.11.7,<3.0.0
+pydantic-settings>=2.6.1
+
+requests==2.32.3
+httpx==0.28.1
+rich==13.9.4
+fastmcp==2.12.5

@@ -1,0 +1,206 @@
+{
+  "name": "db_mcp with hook",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "cd4bb720-88bd-4274-9a9f-c12f7032277c",
+        "responseMode": "streaming",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -112,
+        -64
+      ],
+      "id": "d5faef61-8fb2-4a1a-b968-4f45ec50833c",
+      "name": "Webhook",
+      "webhookId": "cd4bb720-88bd-4274-9a9f-c12f7032277c"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{$json.query.chatInput}}",
+        "options": {
+          "enableStreaming": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        176,
+        -64
+      ],
+      "id": "e9db3958-59c1-4652-a960-b023e3427e06",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        48,
+        160
+      ],
+      "id": "855accc1-8db9-4104-a733-9d48746e4829",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "ZPeKMtiCUaj4M7TM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "在数据库中获取所有带schema的表格列表",
+        "operation": "executeQuery",
+        "query": "SELECT \n    table_schema,\n    table_name\nFROM information_schema.tables\nWHERE table_type = 'BASE TABLE'\n    AND table_schema NOT IN ('pg_catalog', 'information_schema')\nORDER BY table_schema, table_name;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        480,
+        176
+      ],
+      "id": "d8aede77-3d6c-4fc7-957e-8ec20ff32cc1",
+      "name": "Get DB Schema and Tables List",
+      "credentials": {
+        "postgres": {
+          "id": "Bf9snHBLYChSO74u",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "从Postgres查询字段值，若不存在则忽略该字段，请确保使用正确的schema。每个表都与数据库中的某些schema关联。",
+        "operation": "executeQuery",
+        "query": "{{ $fromAI(\"sql_query\", \"SQL Query\") }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        736,
+        144
+      ],
+      "id": "350a42bb-d6a5-470e-a4e6-a1f851bc1ffe",
+      "name": "Execute SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "Bf9snHBLYChSO74u",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "获取表定义以查找所有列和类型",
+        "operation": "executeQuery",
+        "query": "select\n  c.column_name,\n  c.data_type,\n  c.is_nullable,\n  c.column_default,\n  tc.constraint_type,\n  ccu.table_name AS referenced_table,\n  ccu.column_name AS referenced_column\nfrom\n  information_schema.columns c\nLEFT join\n  information_schema.key_column_usage kcu\n  ON c.table_name = kcu.table_name\n  AND c.column_name = kcu.column_name\nLEFT join\n  information_schema.table_constraints tc\n  ON kcu.constraint_name = tc.constraint_name\n  AND tc.constraint_type = 'FOREIGN KEY'\nLEFT join\n  information_schema.constraint_column_usage ccu\n  ON tc.constraint_name = ccu.constraint_name\nwhere\n  c.table_name = '{{ $fromAI(\"table_name\") }}'\n  AND c.table_schema = '{{ $fromAI(\"schema_name\") }}'\norder by\n  c.ordinal_position",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        272,
+        208
+      ],
+      "id": "4f0d4bd0-e361-4d55-bd08-880b5ff09cba",
+      "name": "Get Table Definition",
+      "credentials": {
+        "postgres": {
+          "id": "Bf9snHBLYChSO74u",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Get DB Schema and Tables List": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute SQL query": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Table Definition": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a7d25ea8-a069-4c67-9c7a-ae0a63bbf484",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "432f4a4193ea6a1c5e6eeafd83158fa4163d4b10cba2b86859785c4220194f88"
+  },
+  "id": "z2lX5ynUmuj2qthn",
+  "tags": []
+}
